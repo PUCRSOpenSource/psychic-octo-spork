@@ -53,14 +53,17 @@ sistema) envia uma mensagem via broadcast (DHCP Discover) para descobrir o ender
 servidor DHCP. Assim que o servidor DHCP responder (DHCP Offer), o host cliente irá enviar
 uma mensagem a esse servidor requisitando um novo endereço IP (DHCP Request).
 
-
+![passo1](https://cloud.githubusercontent.com/assets/6035873/19576889/a3bba92a-96f3-11e6-9baa-bf415c936cd1.png)
 
 **Passo 2:** um host atacante A tenta responder a requisição enviada pelo host D antes do
 servidor DHCP principal da rede.
 
+![passo2](https://cloud.githubusercontent.com/assets/6035873/19576890/a3dd92b0-96f3-11e6-8355-4595d901a864.png)
 
 **Passo 3:** em caso de sucesso, o host atacante A torna-se o servidor DHCP responsável por
 atribuir endereços ao host vítima D (DHCP Ack).
+
+![passo3](https://cloud.githubusercontent.com/assets/6035873/19576891/a3e572be-96f3-11e6-87df-02c9e43a953a.png)
 
 Os endereços atribuídos ao host D podem, por exemplo, configurar o gateway padrão para
 apontar para o host atacante, permitindo a implementação de um ataque do tipo man-in-the-
