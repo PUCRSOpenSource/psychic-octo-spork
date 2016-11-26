@@ -55,14 +55,16 @@ void setup(char* options[])
 int monitor_start(int argc, char* argv[])
 {
 
-	if(argc <= 1) {
+	if(argc <= 1)
+	{
 		printf("Format: ./main interface\n");
 		return 0;
 	}
 
 	setup(argv);
 
-	while (true) {
+	while (true)
+	{
 		recv(sockd,(char *) &buffer, sizeof(buffer), 0x0);
 
 		if (is_ipv4(&buffer[ETH_TYPE_INDEX]))
