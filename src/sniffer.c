@@ -13,7 +13,7 @@
 #include <netinet/ip.h>
 
 #include <linux/icmp.h>
-/*#include <linux/tcp.h>*/
+#include <linux/tcp.h>
 /*#include <linux/udp.h>*/
 
 /*#include <netinet/in_systm.h>*/
@@ -32,9 +32,9 @@ struct icmphdr* icmp_header;
 struct tcphdr* tcp_header;
 struct udphdr* udp_header;
 
-static void icmp_handler()
+static void http_handler()
 {
-	icmp_header = (struct icmphdr*) (buffer + (sizeof(struct ether_header) + sizeof(struct iphdr)));
+	icmp_header = (struct icmphdr*) (buffer + (sizeof(struct ether_header) + sizeof(struct iphdr) + sizeof(struct tcphdr)));
 	unsigned int icmp_type =  (icmp_header->type);
 
 	if(icmp_type == 0x0)
@@ -53,7 +53,7 @@ static void sniff_network(void)
 	while (1)
 	{
 		recv(sockd, buffer, BUFFSIZE, 0x0);
-		icmp_handler();
+		http_handler();
 	}
 }
 
