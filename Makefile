@@ -4,7 +4,7 @@ SDIR = ./src
 ODIR = ./obj
 
 CC = gcc
-CFLAGS = -I$(IDIR) -g -Wall -Wpedantic
+CFLAGS = -I$(IDIR) -g -Wall -Wpedantic -pthread
 
 _DEPS = dhcp.h monitor.h
 

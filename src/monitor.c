@@ -74,7 +74,7 @@ void ip_handler()
 		udp_handler();
 }
 
-void* sniffer(void)
+void* sniffer()
 {
 	while (true)
 	{
@@ -98,5 +98,5 @@ int monitor_start(int argc, char* argv[])
 
 	setup(argv);
 	pthread_create(&receiver_thread, NULL, sniffer, NULL);
-
+	return 0;
 }
