@@ -6,11 +6,11 @@ ODIR = ./obj
 CC = gcc
 CFLAGS = -I$(IDIR) -g -Wall -Wpedantic
 
-_DEPS = dhcp.h
+_DEPS = dhcp.h monitor.h
 
 DEPS = $(patsubst %,$(IDIR)/%,$(_DEPS))
 
-_OBJ = dhcp.o main.o
+_OBJ = dhcp.o main.o monitor.o
 
 OBJ = $(patsubst %,$(ODIR)/%,$(_OBJ))
 
