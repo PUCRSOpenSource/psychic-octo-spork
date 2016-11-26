@@ -22,6 +22,7 @@ struct ether_header* eth_header;
 struct iphdr* ip_header;
 struct tcphdr* tcp_header;
 struct udphdr* udp_header;
+struct dhcp_packet* dhcp_header;
 
 extern unsigned char buffer[BUFFSIZE];
 extern int sockd;
