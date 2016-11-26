@@ -10,15 +10,15 @@
 #include <net/if.h>
 #include <netinet/ether.h>
 #include <netinet/in.h>
-/*#include <netinet/ip.h>*/
+#include <netinet/ip.h>
 
-/*#include <linux/icmp.h>*/
+#include <linux/icmp.h>
 /*#include <linux/tcp.h>*/
 /*#include <linux/udp.h>*/
 
 /*#include <netinet/in_systm.h>*/
 
-#include <sniffer.h>
+#include "sniffer.h"
 
 unsigned char buffer[BUFFSIZE];
 int sockd;
@@ -32,11 +32,28 @@ struct icmphdr* icmp_header;
 struct tcphdr* tcp_header;
 struct udphdr* udp_header;
 
+static void icmp_handler()
+{
+	icmp_header = (struct icmphdr*) (buffer + (sizeof(struct ether_header) + sizeof(struct iphdr)));
+	unsigned int icmp_type =  (icmp_header->type);
+
+	if(icmp_type == 0x0)
+	{
+		fprintf(stderr, "AIAIAIAI");
+	}
+	else if(icmp_type == 0x8)
+	{
+		fprintf(stderr, "OIOIOIOI");
+	}
+
+}
+
 static void sniff_network(void)
 {
 	while (1)
 	{
 		recv(sockd, buffer, BUFFSIZE, 0x0);
+		icmp_handler();
 	}
 }
 
@@ -52,7 +69,7 @@ static void setup(char* options[])
 
 	if(ioctl(sockd, SIOCGIFINDEX, &ifr) < 0)
 	{
-		printf("ErroR in ioctl!\n");
+		printf("Error in ioctl!\n");
 		exit(1);
 	}
 

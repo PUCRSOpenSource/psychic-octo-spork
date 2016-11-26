@@ -4,6 +4,6 @@
 
 int main(int argc, char* argv[])
 {
-	monitor_start(argc, argv);
+	/*monitor_start(argc, argv);*/
 	sniffer_start(argc, argv);
 }
