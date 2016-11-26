@@ -10,7 +10,7 @@ _DEPS = dhcp.h monitor.h
 
 DEPS = $(patsubst %,$(IDIR)/%,$(_DEPS))
 
-_OBJ = dhcp.o main.o monitor.o
+_OBJ = main.o monitor.o
 
 OBJ = $(patsubst %,$(ODIR)/%,$(_OBJ))
 

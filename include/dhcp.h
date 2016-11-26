@@ -30,6 +30,10 @@
 #ifndef DHCP_H
 #define DHCP_H
 
+#include <sys/types.h>
+#include <netinet/in.h>
+#include <netinet/ip.h>
+
 #define DHCP_UDP_OVERHEAD	(20 + /* IP header */			\
 			        8)   /* UDP header */
 #define DHCP_SNAME_LEN		64
@@ -200,4 +204,3 @@ struct dhcp_packet {
 #define VENDOR_ISC_SUBOPTIONS		2495
 
 #endif /* DHCP_H */
-
