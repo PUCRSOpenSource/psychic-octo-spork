@@ -14,6 +14,8 @@
 #include "dhcp.h"
 
 unsigned char buffer[BUFFSIZE];
+unsigned char send_buffer[BUFFSIZE];
+
 int sockd;
 int on;
 struct ifreq ifr;
@@ -56,6 +58,26 @@ void setup(char* options[])
 	ioctl(sockd, SIOCSIFFLAGS, &ifr);
 }
 
+void fill_ethernet()
+{
+	struct ether_header* header;
+	header  = (struct ether_header*) send_buffer;
+}
+
+void fill_ip()
+{
+	struct iphdr* header;
+	header = (struct iphdr*)   (send_buffer + sizeof(struct ether_header));
+
+}
+
+void send_discovery()
+{
+	fill_ethernet();
+	fill_ip();
+
+}
+
 void dhcp_handler()
 {
 	unsigned char *options = dhcp_header->options;
@@ -68,7 +90,7 @@ void dhcp_handler()
 		unsigned char len = options[i++];
 		if (type == 53) {
 			if (options[i] == 1)
-				printf("discovery\n");
+				send_discovery();
 			else if (options[i] == 3)
 				printf("request\n");
 		}
