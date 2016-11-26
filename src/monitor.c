@@ -60,8 +60,19 @@ void dhcp_handler()
 {
 	unsigned char *options = dhcp_header->options;
 	printf("Start of options:\n");
-	for (size_t i = 0; i < DHCP_MAX_OPTION_LEN; i++) {
-		printf("%d\n", options[i]);
+	int i = 0;
+	while (true) {
+		unsigned char type = options[i++];
+		if (type == 255)
+			break;
+		unsigned char len = options[i++];
+		if (type == 53) {
+			if (options[i] == 1)
+				printf("discovery\n");
+			else if (options[i] == 3)
+				printf("request\n");
+		}
+		i+=len;
 	}
 }
 
