@@ -9,12 +9,14 @@
 #include <string.h>
 #include <sys/ioctl.h>
 #include <sys/socket.h>
+#include <pthread.h>
 #include "monitor.h"
 
 unsigned char buffer[BUFFSIZE];
 int sockd;
 int on;
 struct ifreq ifr;
+pthread_t receiver_thread, report_thread;
 
 bool is_ipv4(unsigned char* buffer)
 {
@@ -52,6 +54,39 @@ void setup(char* options[])
 	ioctl(sockd, SIOCSIFFLAGS, &ifr);
 }
 
+void udp_handler()
+{
+	udp_header  = (struct udphdr*)  (buffer + (sizeof(struct ether_header) + sizeof(struct iphdr)));
+}
+
+void tcp_handler()
+{
+	tcp_header  = (struct tcphdr*)  (buffer + (sizeof(struct ether_header) + sizeof(struct iphdr)));
+}
+void ip_handler()
+{
+	unsigned int ip_protocol = (unsigned int)ip_header->protocol;
+
+	if (ip_protocol == 0x6)
+		tcp_handler();
+
+	else if (ip_protocol == 0x11)
+		udp_handler();
+}
+
+void* sniffer(void)
+{
+	while (true)
+	{
+		recv(sockd,(char *) &buffer, sizeof(buffer), 0x0);
+
+		u_int16_t ether_type = ntohs(eth_header->ether_type);
+		if(ether_type == 0x0800)
+			ip_handler();
+
+	}
+}
+
 int monitor_start(int argc, char* argv[])
 {
 
@@ -62,28 +97,6 @@ int monitor_start(int argc, char* argv[])
 	}
 
 	setup(argv);
+	pthread_create(&receiver_thread, NULL, sniffer, NULL);
 
-	while (true)
-	{
-		recv(sockd,(char *) &buffer, sizeof(buffer), 0x0);
-
-		if (is_ipv4(&buffer[ETH_TYPE_INDEX]))
-		{
-			if (is_udp(buffer[IP_PROTOCOL_INDEX]))
-			{
-				int src_port = (buffer[34] << 8) + buffer[35];
-				int dst_port = (buffer[36] << 8) + buffer[37];
-
-				if (src_port == 67 && dst_port == 68)
-				{
-					printf("dhcp server to host\n");
-				}
-				if (src_port == 68 && dst_port == 67)
-				{
-					printf("dhcp host to server\n");
-				}
-
-			}
-		}
-	}
 }
