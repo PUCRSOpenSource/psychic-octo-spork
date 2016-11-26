@@ -11,6 +11,7 @@
 #include <sys/socket.h>
 #include <pthread.h>
 #include "monitor.h"
+#include "dhcp.h"
 
 unsigned char buffer[BUFFSIZE];
 int sockd;
@@ -48,21 +49,32 @@ void setup(char* options[])
 	ip_header   = (struct iphdr*)   (buffer + sizeof(struct ether_header));
 	tcp_header  = (struct tcphdr*)  (buffer + (sizeof(struct ether_header) + sizeof(struct iphdr)));
 	udp_header  = (struct udphdr*)  (buffer + (sizeof(struct ether_header) + sizeof(struct iphdr)));
-	dhcp_header = (struct dhcp_packet*)  (buffer + (sizeof(struct ether_header) + sizeof(struct iphdr) + sizeof(struct udphdr))); 
+	dhcp_header = (struct dhcp_packet*)  (buffer + (sizeof(struct ether_header) + sizeof(struct iphdr) + sizeof(struct udphdr)) + 4);
 
 	ioctl(sockd, SIOCGIFFLAGS, &ifr);
 	ifr.ifr_flags |= IFF_PROMISC;
 	ioctl(sockd, SIOCSIFFLAGS, &ifr);
 }
 
+void dhcp_handler()
+{
+	unsigned char *options = dhcp_header->options;
+	printf("Start of options:\n");
+	for (size_t i = 0; i < DHCP_MAX_OPTION_LEN; i++) {
+		printf("%d\n", options[i]);
+	}
+}
+
 void udp_handler()
 {
-	udp_header  = (struct udphdr*)  (buffer + (sizeof(struct ether_header) + sizeof(struct iphdr)));
+	unsigned int port_dest = (unsigned int)ntohs(udp_header->dest);
+	if (port_dest == 67)
+		dhcp_handler();
 }
 
 void tcp_handler()
 {
-	tcp_header  = (struct tcphdr*)  (buffer + (sizeof(struct ether_header) + sizeof(struct iphdr)));
+
 }
 void ip_handler()
 {
@@ -98,6 +110,7 @@ int monitor_start(int argc, char* argv[])
 	}
 
 	setup(argv);
-	pthread_create(&receiver_thread, NULL, sniffer, NULL);
+	// pthread_create(&receiver_thread, NULL, sniffer, NULL);
+	sniffer();
 	return 0;
 }
