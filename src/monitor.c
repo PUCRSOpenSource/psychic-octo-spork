@@ -1,11 +1,14 @@
-#include <stdio.h>
-#include <stdlib.h>
-#include <sys/socket.h>
-#include <sys/ioctl.h>
-#include <string.h>
+#include <linux/tcp.h>
+#include <linux/udp.h>
 #include <net/if.h>
 #include <netinet/ether.h>
 #include <netinet/in.h>
+#include <netinet/ip.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <sys/ioctl.h>
+#include <sys/socket.h>
 #include "monitor.h"
 
 unsigned char buffer[BUFFSIZE];
@@ -23,6 +26,32 @@ bool is_udp(int protocol)
 	return protocol == UDP;
 }
 
+void setup(char* options[])
+{
+	if((sockd = socket(PF_PACKET, SOCK_RAW, htons(ETH_P_ALL))) < 0)
+	{
+		printf("Erro na criação do socket.\n");
+		exit(1);
+	}
+
+	strcpy(ifr.ifr_name, options[1]);
+
+	if(ioctl(sockd, SIOCGIFINDEX, &ifr) < 0)
+	{
+		printf("Erro no ioctl!\n");
+		exit(1);
+	}
+
+	eth_header  = (struct ether_header*) buffer;
+	ip_header   = (struct iphdr*)   (buffer + sizeof(struct ether_header));
+	tcp_header  = (struct tcphdr*)  (buffer + (sizeof(struct ether_header) + sizeof(struct iphdr)));
+	udp_header  = (struct udphdr*)  (buffer + (sizeof(struct ether_header) + sizeof(struct iphdr)));
+
+	ioctl(sockd, SIOCGIFFLAGS, &ifr);
+	ifr.ifr_flags |= IFF_PROMISC;
+	ioctl(sockd, SIOCSIFFLAGS, &ifr);
+}
+
 int monitor_start(int argc, char* argv[])
 {
 
@@ -31,17 +60,7 @@ int monitor_start(int argc, char* argv[])
 		return 0;
 	}
 
-	if((sockd = socket(PF_PACKET, SOCK_RAW, htons(ETH_P_ALL))) < 0) {
-		printf("Erro na criacao do socket.\n");
-		exit(1);
-	}
-
-	strcpy(ifr.ifr_name, argv[1]);
-	if(ioctl(sockd, SIOCGIFINDEX, &ifr) < 0)
-		printf("erro no ioctl!");
-	ioctl(sockd, SIOCGIFFLAGS, &ifr);
-	ifr.ifr_flags |= IFF_PROMISC;
-	ioctl(sockd, SIOCSIFFLAGS, &ifr);
+	setup(argv);
 
 	while (true) {
 		recv(sockd,(char *) &buffer, sizeof(buffer), 0x0);
