@@ -18,10 +18,10 @@
 #define TCP 6
 #define UDP 17
 
-extern struct ether_header* eth_header;
-extern struct iphdr* ip_header;
-extern struct tcphdr* tcp_header;
-extern struct udphdr* udp_header;
+struct ether_header* eth_header;
+struct iphdr* ip_header;
+struct tcphdr* tcp_header;
+struct udphdr* udp_header;
 
 extern unsigned char buffer[BUFFSIZE];
 extern int sockd;
