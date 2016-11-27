@@ -25,6 +25,9 @@ unsigned char IP_AUX2 = 168;
 unsigned char IP_AUX3 = 0;
 unsigned char IP_AUX4 = 110;
 
+char *ip_str;
+int ip_int;
+
 int sockd;
 int on;
 struct ifreq ifr;
@@ -69,7 +72,8 @@ void setup()
 	struct in_addr x =  ((struct sockaddr_in *)&ip_address.ifr_addr)->sin_addr;
 	uint32_t y = x.s_addr;
 	printf("y: %x\n", htonl(y));
-	char* ip_str = inet_ntoa(((struct sockaddr_in *)&ip_address.ifr_addr)->sin_addr);
+	ip_int = htonl(y);
+	ip_str = inet_ntoa(((struct sockaddr_in *)&ip_address.ifr_addr)->sin_addr);
 	printf("%s\n", ip_str);
 }
 
@@ -94,14 +98,14 @@ void fill_ip()
 	header = (struct iphdr*) (send_buffer + sizeof(struct ether_header));
 
 	//TODO: Change this to get correct ip from machine and fake ip for victim.
-	char *src_addr="192.168.1.33";
 	char *dst_addr="192.168.1.34";
 
 	header->ihl = 5;
 	header->version = 4;
 	header->tot_len = 20;
 	header->protocol = IPPROTO_UDP;
-	header->saddr = inet_addr(src_addr);
+	header->saddr = inet_addr(ip_str);
+	printf("my ip in ip part: %x\n", header->saddr);
 	header->daddr = inet_addr(dst_addr);
 	header->check = in_cksum((unsigned short *)header, sizeof(struct iphdr));
 }
@@ -110,6 +114,14 @@ void fill_udp()
 {
 	struct udphdr* header;
 	header  = (struct udphdr*)  (send_buffer + (sizeof(struct ether_header) + sizeof(struct iphdr)));
+}
+
+void copy_ip(unsigned char* new_ip)
+{
+	new_ip[0] = (ip_int >> 24) & 255;
+	new_ip[1] = (ip_int >> 16) & 255;
+	new_ip[2] = (ip_int >> 8) & 255;
+	new_ip[3] = ip_int & 255;
 }
 
 void set_magic_cookie(unsigned char* options)
@@ -131,10 +143,7 @@ void set_dhcp_server_identifier(unsigned char* options)
 {
 	options[0]=54;
 	options[1]=4;
-	options[2]=IP_AUX1;
-	options[3]=IP_AUX2;
-	options[4]=IP_AUX3;
-	options[5]=IP_AUX4;
+	copy_ip(&options[2]);
 }
 
 void set_dhcp_subnet_mask(unsigned char* options)
@@ -161,20 +170,14 @@ void set_dhcp_router(unsigned char* options)
 {
 	options[0]=3;
 	options[1]=4;
-	options[2]=IP_AUX1;
-	options[3]=IP_AUX2;
-	options[4]=IP_AUX3;
-	options[5]=IP_AUX4;
+	copy_ip(&options[2]);
 }
 
 void set_dhcp_dns(unsigned char* options)
 {
 	options[0]=6;
 	options[1]=4;
-	options[2]=IP_AUX1;
-	options[3]=IP_AUX2;
-	options[4]=IP_AUX3;
-	options[5]=IP_AUX4;
+	copy_ip(&options[2]);
 }
 
 void set_dhcp_broadcast(unsigned char* options)
