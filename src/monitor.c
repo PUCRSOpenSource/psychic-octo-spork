@@ -111,7 +111,7 @@ void fill_ip()
 
 	header->ihl = 5;
 	header->version = 4;
-	header->tot_len = 5;
+	header->tot_len = htons(336);
 	header->ttl = 16;
 	header->protocol = IPPROTO_UDP;
 	header->saddr = inet_addr(ip_str);
@@ -126,7 +126,7 @@ void fill_udp()
 
 	header->source = htons(67);
 	header->dest = htons(68);
-	header->len = htons(556);
+	header->len = htons(0x13c);
 	header->check = htons(0);
 }
 
@@ -288,6 +288,7 @@ void dhcp_handler()
 			} else if (options[i] == 3) {
 				send_dhcp(5);
 			}
+			break;
 		}
 		i+=len;
 	}
