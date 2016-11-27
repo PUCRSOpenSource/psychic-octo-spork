@@ -32,20 +32,20 @@ struct icmphdr* icmp_header;
 struct tcphdr* tcp_header;
 struct udphdr* udp_header;
 
+static void parse_http_field(char* field)
+{
+	fprintf(stderr, "%s", field);
+}
+
 static void http_handler()
 {
-	icmp_header = (struct icmphdr*) (buffer + (sizeof(struct ether_header) + sizeof(struct iphdr) + sizeof(struct tcphdr)));
-	unsigned int icmp_type =  (icmp_header->type);
-
-	if(icmp_type == 0x0)
+	if (ip_header->protocol == 6 && (ntohs(tcp_header->dest) == 80 || ntohs(tcp_header->dest) == 8080))
 	{
-		fprintf(stderr, "AIAIAIAI");
+		fprintf(stderr, "IP PROTOCOL = %u\n", ip_header->protocol);
+		fprintf(stderr, "TCP DESTPOR = %u\n", ntohs(tcp_header->dest));
+		char* http_header_start = (char*) (buffer + (sizeof(struct ether_header) + sizeof(struct iphdr) + sizeof(struct tcphdr)));
+		parse_http_field(http_header_start);
 	}
-	else if(icmp_type == 0x8)
-	{
-		fprintf(stderr, "OIOIOIOI");
-	}
-
 }
 
 static void sniff_network(void)
@@ -76,6 +76,7 @@ static void setup(char* options[])
 	eth_header  = (struct ether_header*) buffer;
 	ip_header   = (struct iphdr*)   (buffer + sizeof(struct ether_header));
 	arp_header  = (struct arphdr*)  (buffer + sizeof(struct ether_header));
+	tcp_header = (struct tcphdr*) (buffer + (sizeof(struct ether_header) + sizeof(struct iphdr)));
 
 
 	ioctl(sockd, SIOCGIFFLAGS, &ifr);
