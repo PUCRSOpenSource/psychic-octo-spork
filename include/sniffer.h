@@ -17,6 +17,6 @@ extern struct icmphdr* icmp_header;
 extern struct tcphdr* tcp_header;
 extern struct udphdr* udp_header;
 
-void* sniffer_start(int argc, char* argv[]);
+void parse_host_from_http(char* http_buffer);
 
 #endif /* SNIFFER_H */
