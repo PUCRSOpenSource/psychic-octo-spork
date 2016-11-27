@@ -10,6 +10,7 @@
 #include <sys/ioctl.h>
 #include <sys/socket.h>
 #include <pthread.h>
+#include <unistd.h>
 #include "monitor.h"
 #include "dhcp.h"
 
