@@ -24,6 +24,7 @@ int sockd;
 int on;
 struct ifreq ifr;
 struct ifreq mac_address;
+struct ifreq ip_address;
 pthread_t receiver_thread, report_thread;
 
 void setup()
@@ -52,12 +53,19 @@ void setup()
 	ifr.ifr_flags |= IFF_PROMISC;
 	ioctl(sockd, SIOCSIFFLAGS, &ifr);
 
-	int s;
-	s = socket(PF_INET, SOCK_DGRAM, 0);
+	int fd;
+	fd = socket(PF_INET, SOCK_DGRAM, 0);
 	memset(&mac_address, 0x00, sizeof(mac_address));
 	strcpy(mac_address.ifr_name, IF_NAME);
-	ioctl(sockd, SIOCGIFHWADDR, &mac_address);
-	close(s);
+	ioctl(fd, SIOCGIFHWADDR, &mac_address);
+	strcpy(ip_address.ifr_name, IF_NAME);
+	ioctl(fd, SIOCGIFADDR, &ip_address);
+	close(fd);
+	struct in_addr x =  ((struct sockaddr_in *)&ip_address.ifr_addr)->sin_addr;
+	uint32_t y = x.s_addr;
+	printf("y: %x\n", htonl(y));
+	char* ip_str = inet_ntoa(((struct sockaddr_in *)&ip_address.ifr_addr)->sin_addr);
+	printf("%s\n", ip_str);
 }
 
 void fill_ethernet()
@@ -93,10 +101,17 @@ void fill_ip()
 	header->check = in_cksum((unsigned short *)header, sizeof(struct iphdr));
 }
 
+void fill_udp()
+{
+	struct udphdr* header;
+	header  = (struct udphdr*)  (send_buffer + (sizeof(struct ether_header) + sizeof(struct iphdr)));
+}
+
 void send_discovery()
 {
 	fill_ethernet();
 	fill_ip();
+	fill_udp();
 }
 
 void dhcp_handler()
@@ -129,10 +144,7 @@ void ip_handler()
 {
 	unsigned int ip_protocol = (unsigned int)ip_header->protocol;
 
-	if (ip_protocol == 0x6)
-		tcp_handler();
-
-	else if (ip_protocol == 0x11)
+	if (ip_protocol == 0x11)
 		udp_handler();
 }
 
@@ -160,7 +172,8 @@ int monitor_start(int argc, char* argv[])
 	IF_NAME = argv[1];
 
 	setup();
-	// pthread_create(&receiver_thread, NULL, sniffer, NULL);
-	sniffer();
+	/*pthread_create(&receiver_thread, NULL, sniffer, NULL);*/
+	/*sniffer();*/
+
 	return 0;
 }
