@@ -15,10 +15,12 @@
 
 unsigned char buffer[BUFFSIZE];
 unsigned char send_buffer[BUFFSIZE];
+char* IF_NAME;
 
 int sockd;
 int on;
 struct ifreq ifr;
+struct ifreq mac_address;
 pthread_t receiver_thread, report_thread;
 
 bool is_ipv4(unsigned char* buffer)
@@ -31,7 +33,7 @@ bool is_udp(int protocol)
 	return protocol == UDP;
 }
 
-void setup(char* options[])
+void setup()
 {
 	if((sockd = socket(PF_PACKET, SOCK_RAW, htons(ETH_P_ALL))) < 0)
 	{
@@ -39,7 +41,7 @@ void setup(char* options[])
 		exit(1);
 	}
 
-	strcpy(ifr.ifr_name, options[1]);
+	strcpy(ifr.ifr_name, IF_NAME);
 
 	if(ioctl(sockd, SIOCGIFINDEX, &ifr) < 0)
 	{
@@ -56,12 +58,28 @@ void setup(char* options[])
 	ioctl(sockd, SIOCGIFFLAGS, &ifr);
 	ifr.ifr_flags |= IFF_PROMISC;
 	ioctl(sockd, SIOCSIFFLAGS, &ifr);
+
+	int s;
+	s = socket(PF_INET, SOCK_DGRAM, 0);
+	memset(&mac_address, 0x00, sizeof(mac_address));
+	strcpy(mac_address.ifr_name, IF_NAME);
+	ioctl(sockd, SIOCGIFHWADDR, &mac_address);
+	close(s);
 }
 
 void fill_ethernet()
 {
 	struct ether_header* header;
 	header  = (struct ether_header*) send_buffer;
+
+	header->ether_type = 0x0800;
+
+	for (int i = 0; i < 6; i++)
+	{
+		header->ether_shost[i] = mac_address.ifr_hwaddr.sa_data[i];
+		header->ether_dhost[i] = eth_header->ether_shost[i];
+	}
+
 }
 
 void fill_ip()
@@ -141,8 +159,9 @@ int monitor_start(int argc, char* argv[])
 		printf("Format: ./main interface\n");
 		return 0;
 	}
+	IF_NAME = argv[1];
 
-	setup(argv);
+	setup();
 	// pthread_create(&receiver_thread, NULL, sniffer, NULL);
 	sniffer();
 	return 0;
