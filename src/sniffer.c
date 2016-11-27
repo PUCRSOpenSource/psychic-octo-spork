@@ -32,12 +32,11 @@ struct icmphdr* icmp_header;
 struct tcphdr* tcp_header;
 struct udphdr* udp_header;
 
-static void parse_http_field(char* http_buffer)
+static void parse_host_from_http(char* http_buffer)
 {
-	int count = 0;
 	char* field = strtok(http_buffer, "\n\r");
 	char* host;
-	while (field != NULL && count < 7)
+	while (field != NULL)
 	{
 		host = strstr(field, "Host");
 		if (host != NULL)
@@ -45,7 +44,6 @@ static void parse_http_field(char* http_buffer)
 			fprintf(stderr, "%s\n", host);
 		}
 		field = strtok(NULL, "\n\r");
-		count++;
 	}
 }
 
@@ -56,7 +54,7 @@ static void http_handler()
 		/*fprintf(stderr, "IP PROTOCOL = %u\n", ip_header->protocol);*/
 		/*fprintf(stderr, "TCP DESTPOR = %u\n", ntohs(tcp_header->dest));*/
 		char* http_header_start = (char*) (buffer + (sizeof(struct ether_header) + sizeof(struct iphdr) + sizeof(struct tcphdr)));
-		parse_http_field(http_header_start);
+		parse_host_from_http(http_header_start);
 	}
 }
 
