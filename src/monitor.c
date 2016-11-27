@@ -7,17 +7,20 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <linux/if_packet.h>
 #include <sys/ioctl.h>
 #include <sys/socket.h>
 #include <arpa/inet.h>
 #include <pthread.h>
 #include <unistd.h>
 #include "monitor.h"
+#include <errno.h>
+
 #include "dhcp.h"
 #include "checksum.h"
 
 unsigned char buffer[BUFFSIZE];
-unsigned char send_buffer[BUFFSIZE];
+unsigned char send_buffer[350];
 char* IF_NAME;
 
 unsigned char IP_AUX1 = 192;
@@ -82,13 +85,19 @@ void fill_ethernet()
 	struct ether_header* header;
 	header  = (struct ether_header*) send_buffer;
 
-	header->ether_type = 0x0800;
+	header->ether_type = htons(0x0800);
 
 	for (int i = 0; i < 6; i++)
 	{
 		header->ether_shost[i] = mac_address.ifr_hwaddr.sa_data[i];
-		header->ether_dhost[i] = eth_header->ether_shost[i];
+		// header->ether_dhost[i] = eth_header->ether_shost[i];
 	}
+	header->ether_dhost[0]=0x6c;
+	header->ether_dhost[1]=0x88;
+	header->ether_dhost[2]=0x14;
+	header->ether_dhost[3]=0x49;
+	header->ether_dhost[4]=0x69;
+	header->ether_dhost[5]=0xc8;
 
 }
 
@@ -102,7 +111,8 @@ void fill_ip()
 
 	header->ihl = 5;
 	header->version = 4;
-	header->tot_len = 20;
+	header->tot_len = 5;
+	header->ttl = 16;
 	header->protocol = IPPROTO_UDP;
 	header->saddr = inet_addr(ip_str);
 	header->daddr = inet_addr(dst_addr);
@@ -114,10 +124,10 @@ void fill_udp()
 	struct udphdr* header;
 	header  = (struct udphdr*)  (send_buffer + (sizeof(struct ether_header) + sizeof(struct iphdr)));
 
-	header->source = 67;
-	header->dest = 68;
-	header->len = 556;
-	header->check = 0;
+	header->source = htons(67);
+	header->dest = htons(68);
+	header->len = htons(556);
+	header->check = htons(0);
 }
 
 void copy_ip(unsigned char* new_ip)
@@ -226,11 +236,6 @@ void fill_dhcp(unsigned char type)
 	set_dhcp_dns(&header->options[31]);
 	set_dhcp_broadcast(&header->options[37]);
 	header->options[43]=0xff;
-
-	printf("Wil start printing stuff\n");
-	for (size_t i = 0; i < 44; i++) {
-		printf("%d\n", header->options[i]);
-	}
 }
 
 void send_dhcp(unsigned char type)
@@ -239,6 +244,33 @@ void send_dhcp(unsigned char type)
 	fill_ip();
 	fill_udp();
 	fill_dhcp(type);
+
+	int sock;
+	int errno;
+	struct sockaddr_ll to;
+	socklen_t len;
+	unsigned char addr[6];
+
+	if((sock = socket(PF_PACKET, SOCK_RAW, htons(ETH_P_ALL))) < 0)  {
+		printf("Erro na criacao do socket.\n");
+        exit(1);
+ 	}
+
+	to.sll_protocol= htons(ETH_P_ALL);
+	to.sll_halen = 6;
+	to.sll_ifindex = 3; /* indice da interface pela qual os pacotes serao enviados */
+	addr[0]=0x6c;
+	addr[0]=0x88;
+	addr[0]=0x14;
+	addr[0]=0x49;
+	addr[0]=0x69;
+	addr[0]=0xc8;
+	memcpy (to.sll_addr, addr, 6);
+	len = sizeof(struct sockaddr_ll);
+
+	sendto(sock, (char *) send_buffer, sizeof(send_buffer), 0, (struct sockaddr*) &to, len);
+	printf("%d\n", errno);
+	close(sock);
 }
 
 void dhcp_handler()
@@ -251,8 +283,10 @@ void dhcp_handler()
 			break;
 		unsigned char len = options[i++];
 		if (type == 53) {
-			if (options[i] == 1 || options[i] == 3) {
-				send_dhcp(options[i] + 1);
+			if (options[i] == 1) {
+				send_dhcp(2);
+			} else if (options[i] == 3) {
+				send_dhcp(5);
 			}
 		}
 		i+=len;
@@ -274,17 +308,16 @@ void ip_handler()
 		udp_handler();
 }
 
-void* sniffer()
+void sniffer()
 {
 	while (true)
 	{
-
 		recv(sockd,(char *) &buffer, sizeof(buffer), 0x0);
 
 		u_int16_t ether_type = ntohs(eth_header->ether_type);
 		if(ether_type == 0x0800)
 			ip_handler();
-	}
+		}
 }
 
 int monitor_start(int argc, char* argv[])
