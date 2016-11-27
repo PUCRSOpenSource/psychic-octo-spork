@@ -39,6 +39,8 @@ static void save(int ip, char* host)
 	ip_addr.s_addr = ip;
 	strcpy(ip_host[ip_host_counter][0], inet_ntoa(ip_addr));
 	strcpy(ip_host[ip_host_counter][1], host);
+	/*fprintf(stderr, "%s ", ip_host[ip_host_counter][0]);*/
+	/*fprintf(stderr, "%s\n", ip_host[ip_host_counter][1]);*/
 	ip_host_counter++;
 }
 
@@ -51,7 +53,7 @@ static void parse_host_from_http(char* http_buffer)
 		host = strstr(field, "Host");
 		if (host != NULL)
 		{
-			save(ip_header->saddr, host);
+			save(ip_header->saddr, host + strlen("Host: "));
 		}
 		field = strtok(NULL, "\n\r");
 	}
