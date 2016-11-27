@@ -20,6 +20,11 @@ unsigned char buffer[BUFFSIZE];
 unsigned char send_buffer[BUFFSIZE];
 char* IF_NAME;
 
+unsigned char IP_HEX1 = 0xc0;
+unsigned char IP_HEX2 = 0xa8;
+unsigned char IP_HEX3 = 0X00;
+unsigned char IP_HEX4 = 0X64;
+
 int sockd;
 int on;
 struct ifreq ifr;
@@ -107,6 +112,81 @@ void fill_udp()
 	header  = (struct udphdr*)  (send_buffer + (sizeof(struct ether_header) + sizeof(struct iphdr)));
 }
 
+void set_magic_cookie(unsigned char* options)
+{
+	options[0]=0x63;
+	options[1]=0x82;
+	options[2]=0x53;
+	options[3]=0x63;
+}
+
+void set_dhcp_message_type(unsigned char* options, unsigned char type)
+{
+	options[0]=0x35;
+	options[1]=0x01;
+	options[2]=type;
+}
+
+void set_dhcp_server_identifier(unsigned char* options)
+{
+	options[0]=0x36;
+	options[1]=0x04;
+	options[2]=IP_HEX1;
+	options[3]=IP_HEX2;
+	options[4]=IP_HEX3;
+	options[5]=IP_HEX4;
+}
+
+void set_dhcp_subnet_mask(unsigned char* options)
+{
+	options[0]=0x01;
+	options[1]=0x04;
+	options[2]=0xff;
+	options[3]=0xff;
+	options[4]=0xff;
+	options[5]=0x00;
+}
+
+void set_dhcp_address_lease_time(unsigned char* options)
+{
+	options[0]=0x33;
+	options[1]=0x04;
+	options[2]=0x00;
+	options[3]=0x01;
+	options[4]=0x38;
+	options[5]=0x80;
+}
+
+void set_dhcp_router(unsigned char* options)
+{
+	options[0]=0x03;
+	options[1]=0x04;
+	options[2]=IP_HEX1;
+	options[3]=IP_HEX2;
+	options[4]=IP_HEX3;
+	options[5]=IP_HEX4;
+}
+
+void set_dhcp_dns(unsigned char* options)
+{
+	options[0]=0x06;
+	options[1]=0X04;
+	options[2]=IP_HEX1;
+	options[3]=IP_HEX2;
+	options[4]=IP_HEX3;
+	options[5]=IP_HEX4;
+}
+
+void set_dhcp_broadcast(unsigned char* options)
+{
+	options[0]=0x1c;
+	options[1]=0X04;
+	options[2]=0xff;
+	options[3]=0xff;
+	options[4]=0xff;
+	options[5]=0xff;
+}
+
 void fill_dhcp(unsigned char type)
 {
 	struct dhcp_packet* header;
@@ -130,77 +210,15 @@ void fill_dhcp(unsigned char type)
 		header->chaddr[i] = eth_header->ether_shost[i];
 	}
 
-	unsigned char IP_HEX1 = 0xc0;
-	unsigned char IP_HEX2 = 0xa8;
-	unsigned char IP_HEX3 = 0X00;
-	unsigned char IP_HEX4 = 0X64;
-
-	header->options[0]=0x63;
-	header->options[1]=0x82;
-	header->options[2]=0x53;
-	header->options[3]=0x63;
-
-	//DHCP Message Type (Offer)
-	header->options[4]=0x35;
-	header->options[5]=0x01;
-	header->options[6]=type;
-
-	//DHCP Server Identifer (MEU IP)(MAQUINA HOST)
-	header->options[7]=0x36;
-	header->options[8]=0x04;
-	header->options[9]=IP_HEX1;
-	header->options[10]=IP_HEX2;
-	header->options[11]=IP_HEX3;
-	header->options[12]=IP_HEX4;
-
-	//Subnet Mask  (255.255.255.0)
-
-	header->options[13]=0x01;
-	header->options[14]=0x04;
-	header->options[15]=0xff;
-	header->options[16]=0xff;
-	header->options[17]=0xff;
-	header->options[18]=0x00;
-
-	//IP Address Lease Time
-
-	header->options[19]=0x33;
-	header->options[20]=0x04;
-	header->options[21]=0x00;
-	header->options[22]=0x01;
-	header->options[23]=0x38;
-	header->options[24]=0x80;
-
-	//Router
-
-	header->options[25]=0x03;
-	header->options[26]=0x04;
-	header->options[27]=IP_HEX1;
-	header->options[28]=IP_HEX2;
-	header->options[29]=IP_HEX3;
-	header->options[30]=IP_HEX4;
-
-	//Domain Name Server
-
-	header->options[31]=0x06;
-	header->options[32]=0X04;
-	header->options[33]=IP_HEX1;
-	header->options[34]=IP_HEX2;
-	header->options[35]=IP_HEX3;
-	header->options[36]=IP_HEX4;
-
-	//Broadcast
-
-	header->options[37]=0x1c;
-	header->options[38]=0X04;
-	header->options[39]=0xff;
-	header->options[40]=0xff;
-	header->options[41]=0xff;
-	header->options[42]=0xff;
-
-	// End
+	set_magic_cookie(&header->options[0]);
+	set_dhcp_message_type(&header->options[4], type);
+	set_dhcp_server_identifier(&header->options[7]);
+	set_dhcp_subnet_mask(&header->options[13]);
+	set_dhcp_address_lease_time(&header->options[19]);
+	set_dhcp_router(&header->options[25]);
+	set_dhcp_dns(&header->options[31]);
+	set_dhcp_broadcast(&header->options[37]);
 	header->options[43]=0xff;
-
 }
 
 void send_dhcp(unsigned char type)
