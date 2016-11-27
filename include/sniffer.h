@@ -2,6 +2,8 @@
 #define SNIFFER_H
 
 #define BUFFSIZE 1518
+#define MAPSIZE 2000
+#define IPSTRINGSIZE 16
 
 extern unsigned char buffer[BUFFSIZE];
 extern int sockd;

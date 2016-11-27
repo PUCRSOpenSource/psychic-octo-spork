@@ -2,21 +2,17 @@
 #include <stdlib.h>
 #include <string.h>
 #include <pthread.h>
-/*#include <sys/types.h>*/
 #include <sys/socket.h>
 #include <sys/ioctl.h>
-/*#include <unistd.h>*/
+
+#include <arpa/inet.h>
 
 #include <net/if.h>
 #include <netinet/ether.h>
 #include <netinet/in.h>
 #include <netinet/ip.h>
 
-/*#include <linux/icmp.h>*/
 #include <linux/tcp.h>
-/*#include <linux/udp.h>*/
-
-/*#include <netinet/in_systm.h>*/
 
 #include "sniffer.h"
 
@@ -32,6 +28,20 @@ struct icmphdr* icmp_header;
 struct tcphdr* tcp_header;
 struct udphdr* udp_header;
 
+char* ip_host[MAPSIZE][2];
+int ip_host_counter = 0;
+
+static void save(int ip, char* host)
+{
+	ip_host[ip_host_counter][0] = malloc(IPSTRINGSIZE);
+	ip_host[ip_host_counter][1] = malloc(strlen(host) + 1);
+	struct in_addr ip_addr;
+	ip_addr.s_addr = ip;
+	strcpy(ip_host[ip_host_counter][0], inet_ntoa(ip_addr));
+	strcpy(ip_host[ip_host_counter][1], host);
+	ip_host_counter++;
+}
+
 static void parse_host_from_http(char* http_buffer)
 {
 	char* field = strtok(http_buffer, "\n\r");
@@ -41,7 +51,7 @@ static void parse_host_from_http(char* http_buffer)
 		host = strstr(field, "Host");
 		if (host != NULL)
 		{
-			fprintf(stderr, "%s\n", host);
+			save(ip_header->saddr, host);
 		}
 		field = strtok(NULL, "\n\r");
 	}
@@ -51,8 +61,6 @@ static void http_handler()
 {
 	if (ip_header->protocol == 6 && (ntohs(tcp_header->dest) == 80 || ntohs(tcp_header->dest) == 8080))
 	{
-		/*fprintf(stderr, "IP PROTOCOL = %u\n", ip_header->protocol);*/
-		/*fprintf(stderr, "TCP DESTPOR = %u\n", ntohs(tcp_header->dest));*/
 		char* http_header_start = (char*) (buffer + (sizeof(struct ether_header) + sizeof(struct iphdr) + sizeof(struct tcphdr)));
 		parse_host_from_http(http_header_start);
 	}
