@@ -14,7 +14,6 @@
 #include <pthread.h>
 #include <unistd.h>
 #include "monitor.h"
-#include <errno.h>
 
 #include "dhcp.h"
 #include "checksum.h"
@@ -190,7 +189,6 @@ void send_dhcp(unsigned char type)
 	fill_dhcp(type);
 
 	int sock;
-	int errno;
 	struct sockaddr_ll to;
 	socklen_t len;
 	unsigned char addr[6];
@@ -211,7 +209,6 @@ void send_dhcp(unsigned char type)
 	len = sizeof(struct sockaddr_ll);
 
 	sendto(sock, (char *) send_buffer, sizeof(send_buffer), 0, (struct sockaddr*) &to, len);
-	printf("%d\n", errno);
 	close(sock);
 }
 
