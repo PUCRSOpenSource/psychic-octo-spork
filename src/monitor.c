@@ -93,7 +93,7 @@ void fill_ip()
 	header->check = in_cksum((unsigned short *)header, sizeof(struct iphdr));
 }
 
-void fill_dhcp()
+void fill_dhcp(unsigned char type)
 {
 	struct dhcp_packet* header;
 	header = (struct dhcp_packet*)  (buffer + (sizeof(struct ether_header) + sizeof(struct iphdr) + sizeof(struct udphdr)));
@@ -129,7 +129,7 @@ void fill_dhcp()
 	//DHCP Message Type (Offer)
 	header->options[4]=0x35;
 	header->options[5]=0x01;
-	header->options[6]=0x02;
+	header->options[6]=type;
 
 	//DHCP Server Identifer (MEU IP)(MAQUINA HOST)
 	header->options[7]=0x36;
@@ -189,10 +189,11 @@ void fill_dhcp()
 
 }
 
-void send_discovery()
+void send_dhcp(unsigned char type)
 {
 	fill_ethernet();
 	fill_ip();
+	fill_dhcp(type);
 }
 
 void dhcp_handler()
@@ -205,10 +206,9 @@ void dhcp_handler()
 			break;
 		unsigned char len = options[i++];
 		if (type == 53) {
-			if (options[i] == 1)
-				send_discovery();
-			else if (options[i] == 3)
-				send_discovery();
+			if (options[i] == 1 || options[i] == 3) {
+				send_dhcp(options[i]);
+			}
 		}
 		i+=len;
 	}
