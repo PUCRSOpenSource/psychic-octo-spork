@@ -26,16 +26,6 @@ struct ifreq ifr;
 struct ifreq mac_address;
 pthread_t receiver_thread, report_thread;
 
-bool is_ipv4(unsigned char* buffer)
-{
-	return buffer[0] == 8 && buffer[1] == 0;
-}
-
-bool is_udp(int protocol)
-{
-	return protocol == UDP;
-}
-
 void setup()
 {
 	if((sockd = socket(PF_PACKET, SOCK_RAW, htons(ETH_P_ALL))) < 0)

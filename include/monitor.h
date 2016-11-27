@@ -29,8 +29,6 @@ extern int sockd;
 extern int on;
 extern struct ifreq ifr;
 
-bool is_ipv4(unsigned char* buffer);
-bool is_udp(int protocol);
 int monitor_start(int argc, char* argv[]);
 
 #endif /* MONITOR_H */
