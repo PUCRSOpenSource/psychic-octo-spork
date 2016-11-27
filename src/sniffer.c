@@ -39,8 +39,8 @@ static void save(int ip, char* host)
 	ip_addr.s_addr = ip;
 	strcpy(ip_host[ip_host_counter][0], inet_ntoa(ip_addr));
 	strcpy(ip_host[ip_host_counter][1], host);
-	/*fprintf(stderr, "%s ", ip_host[ip_host_counter][0]);*/
-	/*fprintf(stderr, "%s\n", ip_host[ip_host_counter][1]);*/
+	fprintf(stderr, "%s ", ip_host[ip_host_counter][0]);
+	fprintf(stderr, "%s\n", ip_host[ip_host_counter][1]);
 	ip_host_counter++;
 }
 
@@ -68,13 +68,15 @@ static void http_handler()
 	}
 }
 
-static void sniff_network(void)
+static void* sniff_network(void* arg)
 {
 	while (1)
 	{
 		recv(sockd, buffer, BUFFSIZE, 0x0);
 		http_handler();
 	}
+
+	return (void*) EXIT_SUCCESS;
 }
 
 static void setup(char* options[])
@@ -104,14 +106,16 @@ static void setup(char* options[])
 	ioctl(sockd, SIOCSIFFLAGS, &ifr);
 }
 
-void* sniffer_start(int argc,char *argv[])
+void sniffer_start(int argc, char *argv[])
 {
 	if(argc != 2)
 	{
 		printf("Use %s <IF_NAME>\n", argv[0]);
-		return (void*) EXIT_FAILURE;
 	}
-	setup(argv);
-	sniff_network();
-	return (void*) EXIT_SUCCESS;
+	else
+	{
+		setup(argv);
+		pthread_t sniffer_t;
+		pthread_create(&sniffer_t, NULL, sniff_network, NULL);
+	}
 }
