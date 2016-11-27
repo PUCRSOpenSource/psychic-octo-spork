@@ -46,7 +46,7 @@ void setup()
 	ip_header   = (struct iphdr*)   (buffer + sizeof(struct ether_header));
 	tcp_header  = (struct tcphdr*)  (buffer + (sizeof(struct ether_header) + sizeof(struct iphdr)));
 	udp_header  = (struct udphdr*)  (buffer + (sizeof(struct ether_header) + sizeof(struct iphdr)));
-	dhcp_header = (struct dhcp_packet*)  (buffer + (sizeof(struct ether_header) + sizeof(struct iphdr) + sizeof(struct udphdr)) + 4);
+	dhcp_header = (struct dhcp_packet*)  (buffer + (sizeof(struct ether_header) + sizeof(struct iphdr) + sizeof(struct udphdr)));
 
 	ioctl(sockd, SIOCGIFFLAGS, &ifr);
 	ifr.ifr_flags |= IFF_PROMISC;
@@ -93,6 +93,102 @@ void fill_ip()
 	header->check = in_cksum((unsigned short *)header, sizeof(struct iphdr));
 }
 
+void fill_dhcp()
+{
+	struct dhcp_packet* header;
+	header = (struct dhcp_packet*)  (buffer + (sizeof(struct ether_header) + sizeof(struct iphdr) + sizeof(struct udphdr)));
+
+	header->op = 2;
+	header->htype = 1;
+	header->hlen = 6;
+	header->hops = 0;
+	header->xid = dhcp_header->xid;
+	header->secs = 0;
+	header->flags = 0;
+
+	header->ciaddr = dhcp_header->ciaddr;
+	inet_aton("192.168.1.34", &header->yiaddr);
+	header->siaddr = dhcp_header->siaddr;
+	header->giaddr = dhcp_header->giaddr;
+
+	for (int i = 0; i < 6; i++)
+	{
+		header->chaddr[i] = eth_header->ether_shost[i];
+	}
+
+	unsigned char IP_HEX1 = 0xc0;
+	unsigned char IP_HEX2 = 0xa8;
+	unsigned char IP_HEX3 = 0X00;
+	unsigned char IP_HEX4 = 0X64;
+
+	header->options[0]=0x63;
+	header->options[1]=0x82;
+	header->options[2]=0x53;
+	header->options[3]=0x63;
+
+	//DHCP Message Type (Offer)
+	header->options[4]=0x35;
+	header->options[5]=0x01;
+	header->options[6]=0x02;
+
+	//DHCP Server Identifer (MEU IP)(MAQUINA HOST)
+	header->options[7]=0x36;
+	header->options[8]=0x04;
+	header->options[9]=IP_HEX1;
+	header->options[10]=IP_HEX2;
+	header->options[11]=IP_HEX3;
+	header->options[12]=IP_HEX4;
+
+	//Subnet Mask  (255.255.255.0)
+
+	header->options[13]=0x01;
+	header->options[14]=0x04;
+	header->options[15]=0xff;
+	header->options[16]=0xff;
+	header->options[17]=0xff;
+	header->options[18]=0x00;
+
+	//IP Address Lease Time
+
+	header->options[19]=0x33;
+	header->options[20]=0x04;
+	header->options[21]=0x00;
+	header->options[22]=0x01;
+	header->options[23]=0x38;
+	header->options[24]=0x80;
+
+	//Router
+
+	header->options[25]=0x03;
+	header->options[26]=0x04;
+	header->options[27]=IP_HEX1;
+	header->options[28]=IP_HEX2;
+	header->options[29]=IP_HEX3;
+	header->options[30]=IP_HEX4;
+
+	//Domain Name Server
+
+	header->options[31]=0x06;
+	header->options[32]=0X04;
+	header->options[33]=IP_HEX1;
+	header->options[34]=IP_HEX2;
+	header->options[35]=IP_HEX3;
+	header->options[36]=IP_HEX4;
+
+	//Broadcast
+
+	header->options[37]=0x1c;
+	header->options[38]=0X04;
+	header->options[39]=0xff;
+	header->options[40]=0xff;
+	header->options[41]=0xff;
+	header->options[42]=0xff;
+
+	// End
+	header->options[43]=0xff;
+
+}
+
 void send_discovery()
 {
 	fill_ethernet();
@@ -102,7 +198,7 @@ void send_discovery()
 void dhcp_handler()
 {
 	unsigned char *options = dhcp_header->options;
-	int i = 0;
+	int i = 4;
 	while (true) {
 		unsigned char type = options[i++];
 		if (type == 255)
