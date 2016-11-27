@@ -20,10 +20,10 @@ unsigned char buffer[BUFFSIZE];
 unsigned char send_buffer[BUFFSIZE];
 char* IF_NAME;
 
-unsigned char IP_HEX1 = 0xc0;
-unsigned char IP_HEX2 = 0xa8;
-unsigned char IP_HEX3 = 0X00;
-unsigned char IP_HEX4 = 0X64;
+unsigned char IP_AUX1 = 192;
+unsigned char IP_AUX2 = 168;
+unsigned char IP_AUX3 = 0;
+unsigned char IP_AUX4 = 110;
 
 int sockd;
 int on;
@@ -122,69 +122,69 @@ void set_magic_cookie(unsigned char* options)
 
 void set_dhcp_message_type(unsigned char* options, unsigned char type)
 {
-	options[0]=0x35;
-	options[1]=0x01;
+	options[0]=53;
+	options[1]=1;
 	options[2]=type;
 }
 
 void set_dhcp_server_identifier(unsigned char* options)
 {
-	options[0]=0x36;
-	options[1]=0x04;
-	options[2]=IP_HEX1;
-	options[3]=IP_HEX2;
-	options[4]=IP_HEX3;
-	options[5]=IP_HEX4;
+	options[0]=54;
+	options[1]=4;
+	options[2]=IP_AUX1;
+	options[3]=IP_AUX2;
+	options[4]=IP_AUX3;
+	options[5]=IP_AUX4;
 }
 
 void set_dhcp_subnet_mask(unsigned char* options)
 {
-	options[0]=0x01;
-	options[1]=0x04;
-	options[2]=0xff;
-	options[3]=0xff;
-	options[4]=0xff;
-	options[5]=0x00;
+	options[0]=1;
+	options[1]=4;
+	options[2]=255;
+	options[3]=255;
+	options[4]=255;
+	options[5]=0;
 }
 
 void set_dhcp_address_lease_time(unsigned char* options)
 {
-	options[0]=0x33;
-	options[1]=0x04;
-	options[2]=0x00;
-	options[3]=0x01;
-	options[4]=0x38;
-	options[5]=0x80;
+	options[0]=51;
+	options[1]=4;
+	options[2]=0;
+	options[3]=1;
+	options[4]=56;
+	options[5]=128;
 }
 
 void set_dhcp_router(unsigned char* options)
 {
-	options[0]=0x03;
-	options[1]=0x04;
-	options[2]=IP_HEX1;
-	options[3]=IP_HEX2;
-	options[4]=IP_HEX3;
-	options[5]=IP_HEX4;
+	options[0]=3;
+	options[1]=4;
+	options[2]=IP_AUX1;
+	options[3]=IP_AUX2;
+	options[4]=IP_AUX3;
+	options[5]=IP_AUX4;
 }
 
 void set_dhcp_dns(unsigned char* options)
 {
-	options[0]=0x06;
-	options[1]=0X04;
-	options[2]=IP_HEX1;
-	options[3]=IP_HEX2;
-	options[4]=IP_HEX3;
-	options[5]=IP_HEX4;
+	options[0]=6;
+	options[1]=4;
+	options[2]=IP_AUX1;
+	options[3]=IP_AUX2;
+	options[4]=IP_AUX3;
+	options[5]=IP_AUX4;
 }
 
 void set_dhcp_broadcast(unsigned char* options)
 {
-	options[0]=0x1c;
-	options[1]=0X04;
-	options[2]=0xff;
-	options[3]=0xff;
-	options[4]=0xff;
-	options[5]=0xff;
+	options[0]28;
+	options[1]=4;
+	options[2]=255;
+	options[3]=255;
+	options[4]=255;
+	options[5]=255;
 }
 
 void fill_dhcp(unsigned char type)
@@ -219,6 +219,11 @@ void fill_dhcp(unsigned char type)
 	set_dhcp_dns(&header->options[31]);
 	set_dhcp_broadcast(&header->options[37]);
 	header->options[43]=0xff;
+
+	printf("Wil start printing stuff\n");
+	for (size_t i = 0; i < 44; i++) {
+		printf("%d\n", header->options[i]);
+	}
 }
 
 void send_dhcp(unsigned char type)
@@ -240,7 +245,7 @@ void dhcp_handler()
 		unsigned char len = options[i++];
 		if (type == 53) {
 			if (options[i] == 1 || options[i] == 3) {
-				send_dhcp(options[i]);
+				send_dhcp(options[i] + 1);
 			}
 		}
 		i+=len;
@@ -287,7 +292,7 @@ int monitor_start(int argc, char* argv[])
 
 	setup();
 	/*pthread_create(&receiver_thread, NULL, sniffer, NULL);*/
-	/*sniffer();*/
+	sniffer();
 
 	return 0;
 }
