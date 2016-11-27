@@ -190,7 +190,7 @@ void set_dhcp_broadcast(unsigned char* options)
 void fill_dhcp(unsigned char type)
 {
 	struct dhcp_packet* header;
-	header = (struct dhcp_packet*)  (buffer + (sizeof(struct ether_header) + sizeof(struct iphdr) + sizeof(struct udphdr)));
+	header = (struct dhcp_packet*)  (send_buffer + (sizeof(struct ether_header) + sizeof(struct iphdr) + sizeof(struct udphdr)));
 
 	header->op = 2;
 	header->htype = 1;
