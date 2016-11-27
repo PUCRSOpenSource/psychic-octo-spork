@@ -90,15 +90,8 @@ void fill_ethernet()
 	for (int i = 0; i < 6; i++)
 	{
 		header->ether_shost[i] = mac_address.ifr_hwaddr.sa_data[i];
-		// header->ether_dhost[i] = eth_header->ether_shost[i];
+		header->ether_dhost[i] = eth_header->ether_shost[i];
 	}
-	header->ether_dhost[0]=0x6c;
-	header->ether_dhost[1]=0x88;
-	header->ether_dhost[2]=0x14;
-	header->ether_dhost[3]=0x49;
-	header->ether_dhost[4]=0x69;
-	header->ether_dhost[5]=0xc8;
-
 }
 
 void fill_ip()
@@ -259,12 +252,10 @@ void send_dhcp(unsigned char type)
 	to.sll_protocol= htons(ETH_P_ALL);
 	to.sll_halen = 6;
 	to.sll_ifindex = 3; /* indice da interface pela qual os pacotes serao enviados */
-	addr[0]=0x6c;
-	addr[0]=0x88;
-	addr[0]=0x14;
-	addr[0]=0x49;
-	addr[0]=0x69;
-	addr[0]=0xc8;
+	size_t i;
+	for ( i = 0; i < 6; i++)
+		addr[i] = eth_header->ether_shost[i];
+
 	memcpy (to.sll_addr, addr, 6);
 	len = sizeof(struct sockaddr_ll);
 
