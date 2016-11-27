@@ -179,7 +179,7 @@ void set_dhcp_dns(unsigned char* options)
 
 void set_dhcp_broadcast(unsigned char* options)
 {
-	options[0]28;
+	options[0]=28;
 	options[1]=4;
 	options[2]=255;
 	options[3]=255;
