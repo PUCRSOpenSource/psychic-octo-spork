@@ -78,7 +78,7 @@ void fill_ethernet()
 void fill_ip()
 {
 	struct iphdr* header;
-	header = (struct iphdr*) (buffer + sizeof(struct ether_header));
+	header = (struct iphdr*) (send_buffer + sizeof(struct ether_header));
 
 	//TODO: Change this to get correct ip from machine and fake ip for victim.
 	char *src_addr="192.168.1.33";
