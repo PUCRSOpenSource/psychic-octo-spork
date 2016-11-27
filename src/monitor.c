@@ -125,10 +125,6 @@ void udp_handler()
 		dhcp_handler();
 }
 
-void tcp_handler()
-{
-
-}
 void ip_handler()
 {
 	unsigned int ip_protocol = (unsigned int)ip_header->protocol;
