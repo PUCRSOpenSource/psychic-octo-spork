@@ -9,10 +9,12 @@
 #include <string.h>
 #include <sys/ioctl.h>
 #include <sys/socket.h>
+#include <arpa/inet.h>
 #include <pthread.h>
 #include <unistd.h>
 #include "monitor.h"
 #include "dhcp.h"
+#include "checksum.h"
 
 unsigned char buffer[BUFFSIZE];
 unsigned char send_buffer[BUFFSIZE];
@@ -86,21 +88,30 @@ void fill_ethernet()
 void fill_ip()
 {
 	struct iphdr* header;
-	header = (struct iphdr*)   (send_buffer + sizeof(struct ether_header));
+	header = (struct iphdr*) (buffer + sizeof(struct ether_header));
 
+	//TODO: Change this to get correct ip from machine and fake ip for victim.
+	char *src_addr="192.168.1.33";
+	char *dst_addr="192.168.1.34";
+
+	header->ihl = 5;
+	header->version = 4;
+	header->tot_len = 20;
+	header->protocol = IPPROTO_UDP;
+	header->saddr = inet_addr(src_addr);
+	header->daddr = inet_addr(dst_addr);
+	header->check = in_cksum((unsigned short *)header, sizeof(struct iphdr));
 }
 
 void send_discovery()
 {
 	fill_ethernet();
 	fill_ip();
-
 }
 
 void dhcp_handler()
 {
 	unsigned char *options = dhcp_header->options;
-	printf("Start of options:\n");
 	int i = 0;
 	while (true) {
 		unsigned char type = options[i++];
@@ -111,7 +122,7 @@ void dhcp_handler()
 			if (options[i] == 1)
 				send_discovery();
 			else if (options[i] == 3)
-				printf("request\n");
+				send_discovery();
 		}
 		i+=len;
 	}
@@ -143,12 +154,12 @@ void* sniffer()
 {
 	while (true)
 	{
+
 		recv(sockd,(char *) &buffer, sizeof(buffer), 0x0);
 
 		u_int16_t ether_type = ntohs(eth_header->ether_type);
 		if(ether_type == 0x0800)
 			ip_handler();
-
 	}
 }
 
