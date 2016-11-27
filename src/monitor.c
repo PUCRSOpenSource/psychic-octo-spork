@@ -105,7 +105,6 @@ void fill_ip()
 	header->tot_len = 20;
 	header->protocol = IPPROTO_UDP;
 	header->saddr = inet_addr(ip_str);
-	printf("my ip in ip part: %x\n", header->saddr);
 	header->daddr = inet_addr(dst_addr);
 	header->check = in_cksum((unsigned short *)header, sizeof(struct iphdr));
 }
@@ -114,6 +113,11 @@ void fill_udp()
 {
 	struct udphdr* header;
 	header  = (struct udphdr*)  (send_buffer + (sizeof(struct ether_header) + sizeof(struct iphdr)));
+
+	header->source = 67;
+	header->dest = 68;
+	header->len = 556;
+	header->check = 0;
 }
 
 void copy_ip(unsigned char* new_ip)
