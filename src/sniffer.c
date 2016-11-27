@@ -12,7 +12,7 @@
 #include <netinet/in.h>
 #include <netinet/ip.h>
 
-#include <linux/icmp.h>
+/*#include <linux/icmp.h>*/
 #include <linux/tcp.h>
 /*#include <linux/udp.h>*/
 
@@ -32,17 +32,29 @@ struct icmphdr* icmp_header;
 struct tcphdr* tcp_header;
 struct udphdr* udp_header;
 
-static void parse_http_field(char* field)
+static void parse_http_field(char* http_buffer)
 {
-	fprintf(stderr, "%s", field);
+	int count = 0;
+	char* field = strtok(http_buffer, "\n\r");
+	char* host;
+	while (field != NULL && count < 7)
+	{
+		host = strstr(field, "Host");
+		if (host != NULL)
+		{
+			fprintf(stderr, "%s\n", host);
+		}
+		field = strtok(NULL, "\n\r");
+		count++;
+	}
 }
 
 static void http_handler()
 {
 	if (ip_header->protocol == 6 && (ntohs(tcp_header->dest) == 80 || ntohs(tcp_header->dest) == 8080))
 	{
-		fprintf(stderr, "IP PROTOCOL = %u\n", ip_header->protocol);
-		fprintf(stderr, "TCP DESTPOR = %u\n", ntohs(tcp_header->dest));
+		/*fprintf(stderr, "IP PROTOCOL = %u\n", ip_header->protocol);*/
+		/*fprintf(stderr, "TCP DESTPOR = %u\n", ntohs(tcp_header->dest));*/
 		char* http_header_start = (char*) (buffer + (sizeof(struct ether_header) + sizeof(struct iphdr) + sizeof(struct tcphdr)));
 		parse_http_field(http_header_start);
 	}
