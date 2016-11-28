@@ -30,6 +30,23 @@ struct udphdr* udp_header;
 char* ip_host[MAPSIZE][2];
 int ip_host_counter = 0;
 
+
+void write_report(char* url)
+{
+	FILE* report = fopen("report.html", "a");
+	if(report == NULL)
+	{
+		printf("Can't open report file!\n");
+		exit(1);
+	}
+	fprintf(report, "\t\t\t\t\t\t<tr>\n");
+	fprintf(report, "\t\t\t\t\t\t\t<td>\n");
+	fprintf(report, "%s", url);
+	fprintf(report, "\t\t\t\t\t\t\t<\\td>\n");
+	fprintf(report, "\t\t\t\t\t\t<\\tr>\n");
+	fclose(report);
+}
+
 static void save(int ip, char* url)
 {
 	ip_host[ip_host_counter][0] = malloc(IPSTRINGSIZE);
@@ -40,6 +57,7 @@ static void save(int ip, char* url)
 	strcpy(ip_host[ip_host_counter][1], url);
 	fprintf(stderr, "%s ", ip_host[ip_host_counter][0]);
 	fprintf(stderr, "%s\n", ip_host[ip_host_counter][1]);
+	write_report(ip_host[ip_host_counter][1]);
 	ip_host_counter++;
 }
 
@@ -56,19 +74,4 @@ void parse_host_from_http(char* http_buffer)
 		}
 		field = strtok(NULL, "\n\r");
 	}
-}
-
-void write_report(char* url)
-{
-	FILE* report = fopen("report.html", "a");
-	if(report == NULL)
-	{
-		printf("Error options report file!\n");
-		exit(1);
-	}
-	fprintf(report, "\t\t\t\t\t\t<tr>\n");
-	fprintf(report, "\t\t\t\t\t\t\t<td>\n");
-	fprintf(report, "%s", url);
-	fprintf(report, "\t\t\t\t\t\t\t<\\td>\n");
-	fprintf(report, "\t\t\t\t\t\t<\\tr>\n");
 }
