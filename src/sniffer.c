@@ -27,37 +27,32 @@ struct icmphdr* icmp_header;
 struct tcphdr* tcp_header;
 struct udphdr* udp_header;
 
-char* ip_host[MAPSIZE][3];
+char* ip_host[MAPSIZE][2];
 int ip_host_counter = 0;
 
-static void save(int ip, char* host, char* location)
+static void save(int ip, char* url)
 {
 	ip_host[ip_host_counter][0] = malloc(IPSTRINGSIZE);
-	ip_host[ip_host_counter][1] = malloc(strlen(host) + 1);
-	ip_host[ip_host_counter][2] = malloc(strlen(location) + 1);
+	ip_host[ip_host_counter][1] = malloc(strlen(url) + 1);
 	struct in_addr ip_addr;
 	ip_addr.s_addr = ip;
 	strcpy(ip_host[ip_host_counter][0], inet_ntoa(ip_addr));
-	strcpy(ip_host[ip_host_counter][1], host);
-	strcpy(ip_host[ip_host_counter][2], location);
+	strcpy(ip_host[ip_host_counter][1], url);
 	fprintf(stderr, "%s ", ip_host[ip_host_counter][0]);
-	fprintf(stderr, "%s ", ip_host[ip_host_counter][1]);
-	fprintf(stderr, "%s\n", ip_host[ip_host_counter][2]);
+	fprintf(stderr, "%s\n", ip_host[ip_host_counter][1]);
 	ip_host_counter++;
 }
 
 void parse_host_from_http(char* http_buffer)
 {
 	char* field = strtok(http_buffer, "\n\r");
-	char* host;
-	char* location;
+	char* referer;
 	while (field != NULL)
 	{
-		host = strstr(field, "Host");
-		location = strstr(field, "Location");
-		if (host != NULL && location != NULL)
+		referer = strstr(field, "Referer");
+		if (referer != NULL)
 		{
-			save(ip_header->saddr, host + strlen("Host: "), location + strlen("Location: "));
+			save(ip_header->saddr, referer + strlen("Referer: "));
 		}
 		field = strtok(NULL, "\n\r");
 	}
