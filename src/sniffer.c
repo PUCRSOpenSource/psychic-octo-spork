@@ -34,7 +34,7 @@ char* ip_host[MAPSIZE][2];
 int ip_host_counter = 0;
 
 
-void write_report(char* url)
+void write_report(char* ip, char* url)
 {
 	time_t info_time;
 	struct tm* timeinfo;
@@ -49,7 +49,7 @@ void write_report(char* url)
 	}
 	fprintf(report, "\t\t\t\t\t\t<tr>\n");
 	fprintf(report, "\t\t\t\t\t\t\t<td> %d/%d/%d %d:%d:%d </td>\n", timeinfo->tm_mday, timeinfo->tm_mon+1, timeinfo->tm_year+1900, timeinfo->tm_hour, timeinfo->tm_min, timeinfo->tm_sec);
-	fprintf(report, "\t\t\t\t\t\t\t<td> %s </td>\n", hostname);
+	fprintf(report, "\t\t\t\t\t\t\t<td> %s - %s</td>\n", hostname, ip);
 	fprintf(report, "\t\t\t\t\t\t\t<td>%s</td>\n", url);
 	fprintf(report, "\t\t\t\t\t\t</tr>\n");
 	fclose(report);
@@ -65,7 +65,7 @@ static void save(int ip, char* url)
 	strcpy(ip_host[ip_host_counter][1], url);
 	fprintf(stderr, "%s ", ip_host[ip_host_counter][0]);
 	fprintf(stderr, "%s\n", ip_host[ip_host_counter][1]);
-	write_report(ip_host[ip_host_counter][1]);
+	write_report(ip_host[ip_host_counter][0], ip_host[ip_host_counter][1]);
 	ip_host_counter++;
 }
 
