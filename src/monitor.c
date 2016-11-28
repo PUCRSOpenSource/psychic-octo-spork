@@ -227,7 +227,11 @@ void dhcp_handler()
 			} else if (options[i] == 3) {
 				send_dhcp(5);
 			}
-			break;
+		}
+		if (type == 12) {
+			hostname = malloc(len + 1);
+			strcpy(hostname, (const char*)&options[i]);
+			hostname[len] = '\0';
 		}
 		i+=len;
 	}
