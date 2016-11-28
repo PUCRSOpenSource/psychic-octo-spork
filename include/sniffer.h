@@ -17,7 +17,7 @@ extern struct icmphdr* icmp_header;
 extern struct tcphdr* tcp_header;
 extern struct udphdr* udp_header;
 
-extern char* ip_host[MAPSIZE][3];
+extern char* ip_host[MAPSIZE][2];
 extern int ip_host_counter;
 
 void parse_host_from_http(char* http_buffer);
