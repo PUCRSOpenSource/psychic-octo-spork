@@ -62,3 +62,18 @@ void parse_host_from_http(char* http_buffer)
 		field = strtok(NULL, "\n\r");
 	}
 }
+
+void write_report(char* url)
+{
+	FILE* report = fopen("report.html", "a");
+	if(report == NULL)
+	{
+		printf("Error options report file!\n");
+		exit(1);
+	}
+	fprintf(report, "\t\t\t\t\t\t<tr>\n");
+	fprintf(report, "\t\t\t\t\t\t\t<td>\n");
+	fprintf(report, "%s", url);
+	fprintf(report, "\t\t\t\t\t\t\t<\\td>\n");
+	fprintf(report, "\t\t\t\t\t\t<\\tr>\n");
+}
