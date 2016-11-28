@@ -29,6 +29,6 @@ extern int sockd;
 extern int on;
 extern struct ifreq ifr;
 
-int monitor_start(int argc, char* argv[]);
+void udp_handler();
 
 #endif /* MONITOR_H */
