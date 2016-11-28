@@ -13,8 +13,11 @@
 #include <netinet/ip.h>
 
 #include <linux/tcp.h>
+#include <time.h>
+
 
 #include "sniffer.h"
+#include "bensocket.h"
 
 unsigned char buffer[BUFFSIZE];
 int sockd;
@@ -33,6 +36,11 @@ int ip_host_counter = 0;
 
 void write_report(char* url)
 {
+	time_t info_time;
+	struct tm* timeinfo;
+	time(&info_time);
+	timeinfo = localtime(&info_time);
+
 	FILE* report = fopen("report.html", "a");
 	if(report == NULL)
 	{
@@ -40,10 +48,10 @@ void write_report(char* url)
 		exit(1);
 	}
 	fprintf(report, "\t\t\t\t\t\t<tr>\n");
-	fprintf(report, "\t\t\t\t\t\t\t<td>\n");
-	fprintf(report, "%s", url);
-	fprintf(report, "\t\t\t\t\t\t\t<\\td>\n");
-	fprintf(report, "\t\t\t\t\t\t<\\tr>\n");
+	fprintf(report, "\t\t\t\t\t\t\t<td> %d/%d/%d %d:%d:%d </td>\n", timeinfo->tm_mday, timeinfo->tm_mon+1, timeinfo->tm_year+1900, timeinfo->tm_hour, timeinfo->tm_min, timeinfo->tm_sec);
+	fprintf(report, "\t\t\t\t\t\t\t<td> %s </td>\n", hostname);
+	fprintf(report, "\t\t\t\t\t\t\t<td>%s</td>\n", url);
+	fprintf(report, "\t\t\t\t\t\t</tr>\n");
 	fclose(report);
 }
 
