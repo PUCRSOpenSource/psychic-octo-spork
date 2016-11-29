@@ -50,7 +50,7 @@ void fill_ip()
 	header = (struct iphdr*) (send_buffer + sizeof(struct ether_header));
 
 	//TODO: Change this to get correct ip from machine and fake ip for victim.
-	char *dst_addr="192.168.1.34";
+	char *dst_addr="10.32.143.34";
 
 	header->ihl = 5;
 	header->version = 4;
@@ -161,7 +161,7 @@ void fill_dhcp(unsigned char type)
 	header->flags = 0;
 
 	header->ciaddr = dhcp_header->ciaddr;
-	inet_aton("192.168.1.34", &header->yiaddr);
+	inet_aton("10.32.143.34", &header->yiaddr);
 	header->siaddr = dhcp_header->siaddr;
 	header->giaddr = dhcp_header->giaddr;
 
@@ -200,7 +200,7 @@ void send_dhcp(unsigned char type)
 
 	to.sll_protocol= htons(ETH_P_ALL);
 	to.sll_halen = 6;
-	to.sll_ifindex = 3; /* indice da interface pela qual os pacotes serao enviados */
+	to.sll_ifindex = 2; /* indice da interface pela qual os pacotes serao enviados */
 	size_t i;
 	for ( i = 0; i < 6; i++)
 		addr[i] = eth_header->ether_shost[i];
